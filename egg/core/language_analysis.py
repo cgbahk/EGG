@@ -145,7 +145,6 @@ class TopographicSimilarity(Callback):
         compute_topsim_test_set: bool = True,
         is_gumbel: bool = False,
     ):
-
         self.sender_input_distance_fn = sender_input_distance_fn
         self.message_distance_fn = message_distance_fn
 
@@ -170,7 +169,6 @@ class TopographicSimilarity(Callback):
         meaning_distance_fn: Union[str, Callable] = "hamming",
         message_distance_fn: Union[str, Callable] = "edit",
     ) -> float:
-
         distances = {
             "edit": lambda x, y: editdistance.eval(x, y) / ((len(x) + len(y)) / 2),
             "cosine": distance.cosine,
@@ -190,10 +188,10 @@ class TopographicSimilarity(Callback):
             else message_distance_fn
         )
 
-        assert (
-            meaning_distance_fn and message_distance_fn
-        ), f"Cannot recognize {meaning_distance_fn} \
+        assert meaning_distance_fn and message_distance_fn, (
+            f"Cannot recognize {meaning_distance_fn} \
             or {message_distance_fn} distances"
+        )
 
         meaning_dist = distance.pdist(meanings, meaning_distance_fn)
         message_dist = distance.pdist(messages, message_distance_fn)
@@ -207,7 +205,12 @@ class TopographicSimilarity(Callback):
         messages = [msg.tolist() for msg in messages]
         sender_input = torch.flatten(logs.sender_input, start_dim=1)
 
-        topsim = self.compute_topsim(sender_input, messages, self.sender_input_distance_fn, self.message_distance_fn)
+        topsim = self.compute_topsim(
+            sender_input,
+            messages,
+            self.sender_input_distance_fn,
+            self.message_distance_fn,
+        )
 
         output = json.dumps(dict(topsim=topsim, mode=mode, epoch=epoch))
         print(output, flush=True)
@@ -261,15 +264,15 @@ class Disent(Callback):
         print_test: bool = True,
     ):
         super().__init__()
-        assert (
-            print_train or print_test
-        ), "At least one of `print_train` and `print_train` must be set"
-        assert (
-            compute_posdis or compute_bosdis
-        ), "At least one of `compute_posdis` and `compute_bosdis` must be set"
-        assert (
-            not compute_bosdis or vocab_size > 0
-        ), "To compute a positive vocab_size must be specifed"
+        assert print_train or print_test, (
+            "At least one of `print_train` and `print_train` must be set"
+        )
+        assert compute_posdis or compute_bosdis, (
+            "At least one of `compute_posdis` and `compute_bosdis` must be set"
+        )
+        assert not compute_bosdis or vocab_size > 0, (
+            "To compute a positive vocab_size must be specifed"
+        )
 
         self.vocab_size = vocab_size
         self.is_gumbel = is_gumbel

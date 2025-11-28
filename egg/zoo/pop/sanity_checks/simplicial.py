@@ -13,6 +13,7 @@ from xformers import _is_triton_available
 
 Self = TypeVar("Self", bound="SimplicialEmbedding")
 
+
 @dataclass
 class SimplicialEmbeddingConfig:
     L: int
@@ -36,13 +37,12 @@ class SimplicialEmbedding(torch.nn.Module):
         super().__init__()
         self.L = L
         self.temperature = temperature
-        self.printing=True
-
+        self.printing = True
 
     def forward(self, x: torch.Tensor, aux_input=None) -> torch.Tensor:
-        assert (
-            x.shape[-1] % self.L == 0
-        ), f"The embedding dimension {x.shape[-1]} is not divisible by the chosen L parameter {self.L}"
+        assert x.shape[-1] % self.L == 0, (
+            f"The embedding dimension {x.shape[-1]} is not divisible by the chosen L parameter {self.L}"
+        )
 
         # Seperate the input tensor into V chunks
         B, E = x.shape
@@ -50,17 +50,17 @@ class SimplicialEmbedding(torch.nn.Module):
         # print("original ", x)
         Vs = x.reshape(B, self.L, V)
         if self.printing:
-            #get shape of simplicial embedding
+            # get shape of simplicial embedding
             print("original ", x.shape)
             print("Vs shape ", Vs.shape)
-            self.printing=False
+            self.printing = False
         # print("Vs", Vs)
         # Softmax normalize them, with the proposed temperature
         # This is done over the last dimension, so only within Vs
         if self.temperature is not None:
             Vs /= self.temperature
         # print("Vs/temp ", Vs)
-        if False:#_is_triton_available():
+        if False:  # _is_triton_available():
             from xformers.triton.softmax import softmax as triton_softmax
 
             Vs = triton_softmax(
@@ -85,7 +85,14 @@ class SimplicialWrapper(torch.nn.Module):
     Use simplicial embedding as a trainable wrapper around a pretrained model
     """
 
-    def __init__(self, vision_module, L: int, temperature: Optional[float] = None, hidden_size=None, v_output_dim=None) -> None:
+    def __init__(
+        self,
+        vision_module,
+        L: int,
+        temperature: Optional[float] = None,
+        hidden_size=None,
+        v_output_dim=None,
+    ) -> None:
         super().__init__()
         self.vision_module = vision_module
         self.L = L
@@ -94,6 +101,7 @@ class SimplicialWrapper(torch.nn.Module):
         # add optional linear layer
         if hidden_size is not None:
             self.linear = nn.Linear(v_output_dim, hidden_size)
+
     def forward(self, x: torch.Tensor, aux_input=None) -> torch.Tensor:
         x = self.vision_module(x)
         if hasattr(self, "linear"):
@@ -101,6 +109,7 @@ class SimplicialWrapper(torch.nn.Module):
         # print("output ", x)
         x = self.simplicial(x)
         return x
+
 
 class Empty_wrapper(torch.nn.Module):
     def __init__(self, receiver):

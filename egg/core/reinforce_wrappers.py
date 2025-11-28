@@ -722,7 +722,7 @@ class TransformerSenderReinforce(nn.Module):
         self.vocab_size = vocab_size
 
         self.embed_tokens = torch.nn.Embedding(vocab_size, embed_dim)
-        nn.init.normal_(self.embed_tokens.weight, mean=0, std=self.embed_dim ** -0.5)
+        nn.init.normal_(self.embed_tokens.weight, mean=0, std=self.embed_dim**-0.5)
         self.embed_scale = math.sqrt(embed_dim)
 
     def generate_standard(self, encoder_state):
@@ -742,9 +742,7 @@ class TransformerSenderReinforce(nn.Module):
             if self.causal:
                 attn_mask = torch.triu(
                     torch.ones(step + 1, step + 1).byte(), diagonal=1
-                ).to(
-                    device
-                )  # noqa: E226
+                ).to(device)  # noqa: E226
                 attn_mask = attn_mask.float().masked_fill(attn_mask == 1, float("-inf"))
             else:
                 attn_mask = None
@@ -788,9 +786,7 @@ class TransformerSenderReinforce(nn.Module):
             if self.causal:
                 attn_mask = torch.triu(
                     torch.ones(step + 1, step + 1).byte(), diagonal=1
-                ).to(
-                    device
-                )  # noqa: E226
+                ).to(device)  # noqa: E226
                 attn_mask = attn_mask.float().masked_fill(attn_mask == 1, float("-inf"))
             else:
                 attn_mask = None

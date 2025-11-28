@@ -10,10 +10,12 @@ from egg.core.callbacks import WandbLogger
 from typing import Dict, Optional, Union
 import argparse
 
+
 class WandbLogger(WandbLogger):
     """
     Extends the default WandbLogger to include a custom save directory for logs.
     """
+
     def __init__(
         self,
         opts: Union[argparse.ArgumentParser, Dict, str, None] = None,
@@ -34,6 +36,7 @@ class BestStatsTracker(Callback):
     """
     Tracks the best and last training/validation accuracy and loss during training.
     """
+
     def __init__(self):
         super().__init__()
 
@@ -110,6 +113,7 @@ class DistributedSamplerEpochSetter(Callback):
     """
     Ensures that the DistributedSampler is set to the correct epoch for distributed training.
     """
+
     """A callback that sets the right epoch of a DistributedSampler instance."""
 
     def __init__(self):
@@ -128,6 +132,7 @@ class ConsoleLogger(Callback):
     """
     Logs training and validation metrics to the console in JSON or plain text format.
     """
+
     def __init__(self, print_train_loss=False, as_json=False):
         self.print_train_loss = print_train_loss
         self.as_json = as_json

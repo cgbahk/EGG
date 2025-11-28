@@ -175,7 +175,7 @@ def init(
     common_opts = _get_params(arg_parser, params)
 
     if common_opts.random_seed is None:
-        common_opts.random_seed = random.randint(0, 2 ** 31)
+        common_opts.random_seed = random.randint(0, 2**31)
     elif common_opts.distributed_context:
         common_opts.random_seed += common_opts.distributed_context.rank
 
@@ -278,9 +278,9 @@ def move_to(x: Any, device: torch.device) -> Any:
 
 def load_interactions(file_path: str):
     file_path = pathlib.Path(file_path)
-    assert (
-        file_path.exists()
-    ), f"{file_path} does not exist. Interactions cannot be loaded"
+    assert file_path.exists(), (
+        f"{file_path} does not exist. Interactions cannot be loaded"
+    )
     try:
         return torch.load(file_path)
     except FileNotFoundError:

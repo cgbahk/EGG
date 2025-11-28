@@ -21,6 +21,7 @@ from egg.zoo.pop.utils import add_weight_decay, get_common_opts
 from pathlib import Path
 import os
 
+
 def launch_partial_training(
     game: torch.nn.Module,
     opts: argparse.Namespace,
@@ -58,14 +59,15 @@ def launch_partial_training(
     )
     trainer.train(n_epochs=opts.n_epochs)
 
+
 def main(params):
     # normal first training for all agents
     opts = get_common_opts(params=params)
     print(opts)
 
     # only keep the first sender and receiver for the first round of training
-    senders=eval(opts.vision_model_names_senders.replace("#", '"'))
-    receivers=eval(opts.vision_model_names_recvs.replace("#", '"'))
+    senders = eval(opts.vision_model_names_senders.replace("#", '"'))
+    receivers = eval(opts.vision_model_names_recvs.replace("#", '"'))
     opts.vision_model_names_senders = str(senders[:1])
     opts.vision_model_names_recvs = str(receivers[:1])
     game = build_game(opts)
@@ -76,9 +78,9 @@ def main(params):
     opts.checkpoint_dir = Path(opts.checkpoint_dir) / os.environ["SLURM_JOB_ID"]
     opts.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
-    assert (
-        not opts.batch_size % 2
-    ), f"Batch size must be multiple of 2. Found {opts.batch_size} instead"
+    assert not opts.batch_size % 2, (
+        f"Batch size must be multiple of 2. Found {opts.batch_size} instead"
+    )
     print(
         f"Running a distruted training is set to: {opts.distributed_context.is_distributed}. "
         f"World size is {opts.distributed_context.world_size}. "
@@ -107,13 +109,13 @@ def main(params):
         _sender, _ = build_senders_receivers(opts, str([sender]), None)
         game.agents_loss_sampler.add_senders(_sender)
         launch_partial_training(game, opts, train_loader, val_loader)
-    
+
         print(f"Adding receiver {receiver}")
         _, _receiver = build_senders_receivers(opts, None, str([receiver]))
         game.agents_loss_sampler.add_receivers(_receiver)
-        
+
         launch_partial_training(game, opts, train_loader, val_loader)
-    
+
     print("| FINISHED JOB")
 
 

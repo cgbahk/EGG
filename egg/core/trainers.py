@@ -95,9 +95,9 @@ class Trainer:
             isinstance(x, CheckpointSaver) for x in self.callbacks
         ):
             if common_opts.preemptable:
-                assert (
-                    common_opts.checkpoint_dir
-                ), "checkpointing directory has to be specified"
+                assert common_opts.checkpoint_dir, (
+                    "checkpointing directory has to be specified"
+                )
                 d = get_preemptive_checkpoint_dir(common_opts.checkpoint_dir)
                 self.checkpoint_path = d
                 self.load_from_latest(d)
@@ -116,9 +116,9 @@ class Trainer:
                 self.callbacks.append(checkpointer)
 
         if self.distributed_context.is_leader and common_opts.tensorboard:
-            assert (
-                common_opts.tensorboard_dir
-            ), "tensorboard directory has to be specified"
+            assert common_opts.tensorboard_dir, (
+                "tensorboard directory has to be specified"
+            )
             tensorboard_logger = TensorboardLogger()
             self.callbacks.append(tensorboard_logger)
 

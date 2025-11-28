@@ -88,9 +88,7 @@ def build_senders_receivers(
         senders = [
             ContinuousSender(
                 vision_module=find_module_from_name(vision_modules, module_name)[0],
-                input_dim=find_module_from_name(vision_modules, module_name)[
-                    1
-                ],
+                input_dim=find_module_from_name(vision_modules, module_name)[1],
                 vocab_size=opts.vocab_size,
                 name=module_name,
                 non_linearity=opts.non_linearity,
@@ -137,7 +135,12 @@ def build_senders_receivers(
         ]
     # select communication channel wrapper
     elif opts.com_channel == "kmeans":
-        assert len(vision_model_names_senders) == 1 and len(vision_model_names_receiver) == 1, "For now kmeans communication channel only supports one sender and one receiver"
+        assert (
+            len(vision_model_names_senders) == 1
+            and len(vision_model_names_receiver) == 1
+        ), (
+            "For now kmeans communication channel only supports one sender and one receiver"
+        )
         senders = [
             KMeansSender(
                 vision_module=find_module_from_name(vision_modules, module_name)[0],
@@ -155,7 +158,9 @@ def build_senders_receivers(
                 output_dim=opts.vocab_size,
                 temperature=opts.recv_temperature,
                 name=module_name,
-                s_name=vision_model_names_senders[0], # !! only works for pairs, but this setup cannot do clustering for pop anyway
+                s_name=vision_model_names_senders[
+                    0
+                ],  # !! only works for pairs, but this setup cannot do clustering for pop anyway
                 block_com_layer=opts.block_com_layer,
                 path_to_kmeans=opts.path_to_kmeans,
             )

@@ -6,7 +6,7 @@ from typing import Optional
 from pathlib import Path
 import glob
 
-from tqdm.auto import tqdm 
+from tqdm.auto import tqdm
 import hub
 import torch
 import random
@@ -84,17 +84,20 @@ imood_class_ids = np.array(
         21765,
     ]
 )
+
+
 class ClosestImagesSampler(torch.utils.data.sampler.Sampler):
     """
     Organizes the dataset into batches of images with similar representations using KMeans clustering.
     """
+
     def __init__(self, dataset, batch_size, model):
         self.n_clusters = len(dataset) // batch_size
         self.batch_size = batch_size
         self.labels = self._get_labels(dataset)
         self.num_samples = len(self.labels)
         self.clusters = self._get_clusters(model, dataset)
-    
+
     def _get_labels(self, dataset):
         if isinstance(dataset, datasets.ImageFolder):
             return torch.Tensor([torch.Tensor(x[1]).int() for x in dataset.imgs])
@@ -104,12 +107,14 @@ class ClosestImagesSampler(torch.utils.data.sampler.Sampler):
             return dataset.dataset.imgs[:][1]
         else:
             raise NotImplementedError("Dataset type not supported")
-    
+
     def _get_clusters(self, model, dataset, batch_size=64, seed=42):
         # get image representations
-        reps=[]
-        for i in range(len(dataset)//batch_size):
-            dl = torch.stack([dataset[i*batch_size+j][0][0] for j in range(batch_size)], dim=0)
+        reps = []
+        for i in range(len(dataset) // batch_size):
+            dl = torch.stack(
+                [dataset[i * batch_size + j][0][0] for j in range(batch_size)], dim=0
+            )
             with torch.no_grad():
                 rep = model(dl)
             reps.extend(rep)
@@ -121,11 +126,11 @@ class ClosestImagesSampler(torch.utils.data.sampler.Sampler):
 
     def __iter__(self):
         idxs = torch.tensor([])
-        for i in range(self.n_clusters//self.batch_size):
-            c_size=0
-            while c_size<self.batch_size:
+        for i in range(self.n_clusters // self.batch_size):
+            c_size = 0
+            while c_size < self.batch_size:
                 cluster_id = random.choice(self.clusters)
-                c_size=sum(self.clusters==cluster_id)
+                c_size = sum(self.clusters == cluster_id)
             idxs = torch.concat(
                 [
                     idxs,
@@ -137,7 +142,6 @@ class ClosestImagesSampler(torch.utils.data.sampler.Sampler):
                 ]
             )
         return (i for i in torch.tensor(idxs).int())
-
 
 
 class SingleClassDatasetSampler(torch.utils.data.sampler.Sampler):
@@ -159,7 +163,7 @@ class SingleClassDatasetSampler(torch.utils.data.sampler.Sampler):
 
         # distribution of classes in the dataset
         self.labels = self._get_labels(dataset)
-        self.dataset=dataset
+        self.dataset = dataset
         self.len = len(dataset)
         # self.num_samples = (len(dataset) // self.batch_size) * self.batch_size
 
@@ -170,7 +174,12 @@ class SingleClassDatasetSampler(torch.utils.data.sampler.Sampler):
             return torch.Tensor(dataset.img_labels)
         elif isinstance(dataset, torch.utils.data.Subset):
             if isinstance(dataset.dataset, ImagenetValDataset):
-                return torch.tensor([dataset.dataset.img_labels[x] for x in tqdm(dataset.indices, desc="Getting labels")])
+                return torch.tensor(
+                    [
+                        dataset.dataset.img_labels[x]
+                        for x in tqdm(dataset.indices, desc="Getting labels")
+                    ]
+                )
             return torch.tensor([x[1] for x in tqdm(dataset)], dtype=torch.int32)
         else:
             raise NotImplementedError("Dataset type not supported")
@@ -242,7 +251,6 @@ def get_augmentation(attck_name: str, size: int):
 
 
 def collate_fn(batch):
-
     return (
         torch.stack([x[0][0] for x in batch], dim=0),  # sender_input
         torch.cat(
@@ -254,7 +262,6 @@ def collate_fn(batch):
 
 
 def collate_fn_imood(batch):
-
     return (
         torch.stack([x[0][0] for x in batch], dim=0),  # sender_input
         torch.cat(
@@ -368,10 +375,10 @@ def get_dataloader(
             / "ILSVRC2012_devkit_t12/data/ILSVRC2012_validation_ground_truth.txt",
             transform=transformations,
         )
-    else: # includes dataset_name == "celeba"
+    else:  # includes dataset_name == "celeba"
         train_dataset = datasets.ImageFolder(dataset_dir, transform=transformations)
     train_sampler = None
-        # for now, cannot be distributed ! will be overriden !
+    # for now, cannot be distributed ! will be overriden !
     if is_distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(
             train_dataset, shuffle=True, drop_last=True, seed=seed
@@ -388,15 +395,27 @@ def get_dataloader(
             torch.Generator().manual_seed(seed),
         )
         if is_single_class_batch:
-            train_sampler = SingleClassDatasetSampler(train_dataset, batch_size=batch_size)
-            test_sampler = SingleClassDatasetSampler(test_dataset, batch_size=batch_size)
+            train_sampler = SingleClassDatasetSampler(
+                train_dataset, batch_size=batch_size
+            )
+            test_sampler = SingleClassDatasetSampler(
+                test_dataset, batch_size=batch_size
+            )
         if similbatch_training:
             # get indexes of test set
-            assert dataset_name == "imagenet_val", "cosine_sim training only supported for imagenet_val dataset."
-            train_sampler = ProximitySampler("./output/cos_sim_matrix.npy", batch_size, train_dataset.indices)
-            test_sampler = ProximitySampler("./output/cos_sim_matrix.npy", batch_size, test_dataset.indices)
+            assert dataset_name == "imagenet_val", (
+                "cosine_sim training only supported for imagenet_val dataset."
+            )
+            train_sampler = ProximitySampler(
+                "./output/cos_sim_matrix.npy", batch_size, train_dataset.indices
+            )
+            test_sampler = ProximitySampler(
+                "./output/cos_sim_matrix.npy", batch_size, test_dataset.indices
+            )
             if shuffle:
-                warnings.warn("Shuffling is not supported with proximity sampler. Setting shuffle to False.")
+                warnings.warn(
+                    "Shuffling is not supported with proximity sampler. Setting shuffle to False."
+                )
             shuffle = False
         else:
             test_sampler = None
@@ -431,7 +450,9 @@ def get_dataloader(
 
     else:
         if is_single_class_batch:
-            train_sampler = SingleClassDatasetSampler(train_dataset, batch_size=batch_size)
+            train_sampler = SingleClassDatasetSampler(
+                train_dataset, batch_size=batch_size
+            )
         train_loader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=batch_size,

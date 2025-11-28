@@ -33,7 +33,6 @@ class LoggingStrategy:
         message_length: Optional[torch.Tensor],
         aux: Dict[str, torch.Tensor],
     ):
-
         return Interaction(
             sender_input=sender_input if self.store_sender_input else None,
             receiver_input=receiver_input if self.store_receiver_input else None,
@@ -194,13 +193,13 @@ message=tensor([1., 1.]), receiver_output=tensor([1., 1.]), message_length=None,
         for x in interactions:
             assert len(x.aux) == len(interactions[0].aux)
             if has_aux_input:
-                assert len(x.aux_input) == len(
-                    interactions[0].aux_input
-                ), "found two interactions of different aux_info size"
+                assert len(x.aux_input) == len(interactions[0].aux_input), (
+                    "found two interactions of different aux_info size"
+                )
             else:
-                assert (
-                    not x.aux_input
-                ), "some aux_info are defined some are not, this should not happen"
+                assert not x.aux_input, (
+                    "some aux_info are defined some are not, this should not happen"
+                )
 
         aux_input = None
         if has_aux_input:
@@ -228,9 +227,9 @@ message=tensor([1., 1.]), receiver_output=tensor([1., 1.]), message_length=None,
 
     @staticmethod
     def gather_distributed_interactions(log: "Interaction") -> Optional["Interaction"]:
-        assert (
-            distrib.is_initialized()
-        ), "torch.distributed must be initialized beforehand"
+        assert distrib.is_initialized(), (
+            "torch.distributed must be initialized beforehand"
+        )
         world_size = distrib.get_world_size()
 
         def send_collect_tensor(tnsr):

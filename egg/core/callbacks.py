@@ -160,12 +160,12 @@ class WandbLogger(Callback):
 class TemperatureUpdater(Callback):
     def __init__(self, agent, decay=0.9, minimum=0.1, update_frequency=1):
         self.agent = agent
-        assert hasattr(
-            agent, "temperature"
-        ), "Agent must have a `temperature` attribute"
-        assert not isinstance(
-            agent.temperature, torch.nn.Parameter
-        ), "When using TemperatureUpdater, `temperature` cannot be trainable"
+        assert hasattr(agent, "temperature"), (
+            "Agent must have a `temperature` attribute"
+        )
+        assert not isinstance(agent.temperature, torch.nn.Parameter), (
+            "When using TemperatureUpdater, `temperature` cannot be trainable"
+        )
         self.decay = decay
         self.minimum = minimum
         self.update_frequency = update_frequency

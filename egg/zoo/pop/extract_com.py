@@ -1,6 +1,11 @@
 import torch
 from egg.zoo.pop.games import build_game
-from egg.zoo.pop.utils import load_from_checkpoint, get_common_opts, metadata_opener, path_to_parameters
+from egg.zoo.pop.utils import (
+    load_from_checkpoint,
+    get_common_opts,
+    metadata_opener,
+    path_to_parameters,
+)
 from egg.zoo.pop.data import get_dataloader
 from egg.core.batch import Batch
 from egg.core.interaction import Interaction
@@ -8,6 +13,7 @@ from tqdm.auto import tqdm
 import pathlib
 import time
 import warnings
+
 
 def main(params):
     """
@@ -28,7 +34,9 @@ def main(params):
     else:
         _path = path_to_parameters(_path)
         with open(_path) as f:
-            opts = get_common_opts(metadata_opener(f, data_type="wandb", verbose=True) + params)
+            opts = get_common_opts(
+                metadata_opener(f, data_type="wandb", verbose=True) + params
+            )
         print(opts)
     exp_name = (
         str(opts.dataset_name)
@@ -41,7 +49,12 @@ def main(params):
         + (str(opts.force_rank) if opts.force_rank is not None else "")
         + ".pth"
     )
-    build_and_test_game(opts, exp_name=exp_name, dump_dir=opts.checkpoint_dir, force_rank=opts.force_rank)
+    build_and_test_game(
+        opts,
+        exp_name=exp_name,
+        dump_dir=opts.checkpoint_dir,
+        force_rank=opts.force_rank,
+    )
 
 
 def eval(
@@ -87,7 +100,6 @@ def eval(
             interactions.append(interaction)
             n_batches += 1
 
-
     full_interaction = Interaction.from_iterable(interactions)
     return full_interaction
 
@@ -127,14 +139,18 @@ def build_and_test_game(opts, exp_name, dump_dir, device="cuda", force_rank=None
     for param in pop_game.parameters():
         param.requires_grad = False
     pop_game.train(False)
-    pop_game.training=False
+    pop_game.training = False
 
     # Instead of letting the population game use the agent sampler to select a different pair for every batch
     # We choose the pair and evaluate it on all batches
     interactions = []
     if force_rank is not None:
-        print(f"Force rank {force_rank} out of {len(pop_game.agents_loss_sampler.available_indexes)}")
-        pop_game.agents_loss_sampler.available_indexes = [pop_game.agents_loss_sampler.available_indexes[force_rank]]
+        print(
+            f"Force rank {force_rank} out of {len(pop_game.agents_loss_sampler.available_indexes)}"
+        )
+        pop_game.agents_loss_sampler.available_indexes = [
+            pop_game.agents_loss_sampler.available_indexes[force_rank]
+        ]
     for (
         sender_idx,
         recv_idx,
@@ -151,8 +167,13 @@ def build_and_test_game(opts, exp_name, dump_dir, device="cuda", force_rank=None
         }
         # get validation data every time to reset seed (there might be a better and faster way to do this)
         # Beware ! Using all data, both test and train !
-        if opts.dataset_name in ["imagenet_ood","places205","cifar100","celeba"] and opts.split_dataset:
-            warnings.warn(f"You are splitting the {opts.dataset_name} which is only used at test time by using the default split_dataset=True option. This is not recommended, you could run this test on the entire dataset. Running anyway.")
+        if (
+            opts.dataset_name in ["imagenet_ood", "places205", "cifar100", "celeba"]
+            and opts.split_dataset
+        ):
+            warnings.warn(
+                f"You are splitting the {opts.dataset_name} which is only used at test time by using the default split_dataset=True option. This is not recommended, you could run this test on the entire dataset. Running anyway."
+            )
         if not opts.split_dataset:
             test_loader = get_dataloader(
                 dataset_dir=opts.dataset_dir,
@@ -192,7 +213,9 @@ def build_and_test_game(opts, exp_name, dump_dir, device="cuda", force_rank=None
                 receiver,
                 loss,
                 pop_game.game,
-                train_loader if opts.is_single_class_batch or opts.extract_train_com else test_loader, # only train for sc
+                train_loader
+                if opts.is_single_class_batch or opts.extract_train_com
+                else test_loader,  # only train for sc
                 aux_input,
                 opts.com_channel == "gs",
                 opts.batch_size,
@@ -206,6 +229,7 @@ def build_and_test_game(opts, exp_name, dump_dir, device="cuda", force_rank=None
             exp_name if exp_name is not None else "%j_interactions",
             dump_dir,
         )
+
 
 if __name__ == "__main__":
     torch.autograd.set_detect_anomaly(True)

@@ -14,7 +14,12 @@ from egg.zoo.pop.game_callbacks import (
     WandbLogger,
 )
 from egg.zoo.pop.games import build_game, build_second_game
-from egg.zoo.pop.utils import add_weight_decay, get_common_opts, path_to_parameters, metadata_opener
+from egg.zoo.pop.utils import (
+    add_weight_decay,
+    get_common_opts,
+    path_to_parameters,
+    metadata_opener,
+)
 
 from pathlib import Path
 import os
@@ -24,7 +29,7 @@ def main(params):
     _path = ""
     for param in params:
         if "base_checkpoint_path" in param:
-            _path = param.rpartition('=')[2]
+            _path = param.rpartition("=")[2]
             break
 
     if _path == "":
@@ -32,10 +37,12 @@ def main(params):
         opts = get_common_opts(params=params)
         print(opts)
         game = build_game(opts)
-    else :
+    else:
         # adding agents to a population of trained agents
         f = open(path_to_parameters(_path))
-        opts = get_common_opts(metadata_opener(f, data_type="wandb", verbose=True) + params)
+        opts = get_common_opts(
+            metadata_opener(f, data_type="wandb", verbose=True) + params
+        )
         game = build_second_game(opts)
 
     # deal with opts issues due to submitit module being replaced by sweep.py
@@ -44,9 +51,9 @@ def main(params):
     opts.checkpoint_dir = Path(opts.checkpoint_dir) / os.environ["SLURM_JOB_ID"]
     opts.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
-    assert (
-        not opts.batch_size % 2
-    ), f"Batch size must be multiple of 2. Found {opts.batch_size} instead"
+    assert not opts.batch_size % 2, (
+        f"Batch size must be multiple of 2. Found {opts.batch_size} instead"
+    )
     print(
         f"Running a distruted training is set to: {opts.distributed_context.is_distributed}. "
         f"World size is {opts.distributed_context.world_size}. "
@@ -79,9 +86,7 @@ def main(params):
     )
 
     if opts.use_larc:
-        raise NotImplementedError(
-            "LARC is not implemented yet."
-        )
+        raise NotImplementedError("LARC is not implemented yet.")
 
     callbacks = [
         ConsoleLogger(as_json=True, print_train_loss=True),

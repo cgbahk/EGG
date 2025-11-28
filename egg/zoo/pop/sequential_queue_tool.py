@@ -53,7 +53,7 @@ def write_sequential_jobs(
                     ]:
                         # $batch_size.$lr.$vocab_size.$recv_hidden_dim"
                         expname += f"{arg}."
-                outdir = f"{logfile_path}{prefix}.{expname[0:len(expname)-1]}"
+                outdir = f"{logfile_path}{prefix}.{expname[0 : len(expname) - 1]}"
                 args.append(f"--checkpoint_dir={outdir}")
                 # early creation of checkpoint dir for wandb
                 if not os.path.exists(outdir):

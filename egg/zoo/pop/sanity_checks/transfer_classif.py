@@ -11,6 +11,7 @@ from egg.zoo.pop.data import get_dataloader
 import glob
 import numpy as np
 
+
 def load_models(model_path: str, metadata_path: str, device: str) -> list:
     """
     Load models from the given paths and prepare them for evaluation.
@@ -36,6 +37,7 @@ def load_models(model_path: str, metadata_path: str, device: str) -> list:
             param.requires_grad = False
     return senders
 
+
 class LinearClassifier(torch.nn.Module):
     def __init__(self, input_dim: int = 2, output_dim: int = 3):
         """
@@ -56,6 +58,7 @@ class LinearClassifier(torch.nn.Module):
         """
         x = self.linear(x)
         return x
+
 
 def test_epoch(
     senders: list,
@@ -88,6 +91,7 @@ def test_epoch(
         sender_accs.append(accs)
     return sender_accs
 
+
 def transfer_classification(
     model: torch.nn.Module,
     dataset: torch.utils.data.Dataset,
@@ -103,7 +107,9 @@ def transfer_classification(
     :param device: The device to use ('cuda' or 'cpu').
     :return: The classification accuracy.
     """
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    dataloader = torch.utils.data.DataLoader(
+        dataset, batch_size=batch_size, shuffle=False
+    )
     model.eval()
     model.to(device)
     correct = 0
@@ -117,6 +123,7 @@ def transfer_classification(
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
     return correct / total
+
 
 if __name__ == "__main__":
     # load data
@@ -144,22 +151,30 @@ if __name__ == "__main__":
     print(len(classifier_paths), "classifiers")
     classifiers = []
     for f in classifier_paths:
-        classifiers.append(LinearClassifier(64,58).to("cuda"))
+        classifiers.append(LinearClassifier(64, 58).to("cuda"))
         classifiers[-1].load_state_dict(torch.load(f))
     # test, get std
     cl_sacc = []
     for classifier in classifiers:
         sender_accs = test_epoch(senders, classifier, val_dataloader, "cuda")
-        print(sender_accs, np.array(sender_accs).mean(), np.array([np.array(sender_accs[i]).mean() for i in range(len(sender_accs))]).std())
+        print(
+            sender_accs,
+            np.array(sender_accs).mean(),
+            np.array(
+                [np.array(sender_accs[i]).mean() for i in range(len(sender_accs))]
+            ).std(),
+        )
         cl_sacc.append(sender_accs)
 
-    for i,val in enumerate([0,5,2,3,4,1]):
+    for i, val in enumerate([0, 5, 2, 3, 4, 1]):
         print(classifier_paths[i])
         sender_accs = cl_sacc
-        het = np.array([
+        het = np.array(
+            [
                 np.array(sender_accs[i]).mean()
                 for i in range(len(sender_accs))
-                if i != val 
-            ])
+                if i != val
+            ]
+        )
         print(het.mean(), het.std())
         print(np.array(sender_accs[val]).mean())

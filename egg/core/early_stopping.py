@@ -60,14 +60,14 @@ class EarlyStopperAccuracy(EarlyStopper):
 
     def should_stop(self) -> bool:
         if self.validation:
-            assert (
-                self.validation_stats
-            ), "Validation data must be provided for early stooping to work"
+            assert self.validation_stats, (
+                "Validation data must be provided for early stooping to work"
+            )
             loss, last_epoch_interactions = self.validation_stats[-1]
         else:
-            assert (
-                self.train_stats
-            ), "Training data must be provided for early stooping to work"
+            assert self.train_stats, (
+                "Training data must be provided for early stooping to work"
+            )
             loss, last_epoch_interactions = self.train_stats[-1]
 
         metric_mean = last_epoch_interactions.aux[self.field_name].mean()

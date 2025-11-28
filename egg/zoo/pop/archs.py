@@ -22,11 +22,13 @@ from egg.core.util import find_lengths
 from collections.abc import Mapping
 from joblib import load
 
+
 def get_non_linearity(name):
     if name == "softmax":
         return nn.Softmax
     elif name == "sigmoid":
         return nn.Sigmoid
+
 
 def get_model(name, pretrained, aux_logits=True):
     modules = {
@@ -86,15 +88,15 @@ def get_model(name, pretrained, aux_logits=True):
                 "weights": "DEFAULT" if pretrained else None,
             },
         ),
-        "cait":(
+        "cait": (
             timm.create_model,
             {"model_name": "cait_m36_384", "pretrained": pretrained},
         ),
-        "levit":(
+        "levit": (
             timm.create_model,
             {"model_name": "levit_384.fb_dist_in1k", "pretrained": pretrained},
         ),
-        "vit_clip":(
+        "vit_clip": (
             timm.create_model,
             {"model_name": "vit_base_patch16_clip_384", "pretrained": pretrained},
         ),
@@ -153,16 +155,14 @@ def initialize_vision_module(
         model.head.linear = torch.nn.Identity()
         model.head_dist.linear = torch.nn.Identity()
 
-
     elif name == "dino":
         n_features = 384  # ... could go and get that somehow instead of hardcoding ?
         # Dino is already chopped and does not require removal of classif layer
-    
+
     elif name == "vit_clip":
         n_features = model.head.in_features
         model.head = nn.Identity()
         # only used for the visual part, the text part is not used
-    
 
     if pretrained:
         # prevent training by removing gradients
@@ -230,11 +230,13 @@ class Sender(nn.Module):
             raise RuntimeError("Unknown vision module for the Sender")
 
         if vision_module == "levit":
-            warning.warn("levit will automatically resize the input to 224x224, which may be different from the original input size")
-            self.vision_module = nn.Sequential(
-                torchvision.transforms.Resize((224, 224)),
-                self.vision_module
+            warning.warn(
+                "levit will automatically resize the input to 224x224, which may be different from the original input size"
             )
+            self.vision_module = nn.Sequential(
+                torchvision.transforms.Resize((224, 224)), self.vision_module
+            )
+
     def init_com_layer(self, input_dim, vocab_size):
         self.fc = nn.Sequential(
             nn.Linear(input_dim, vocab_size),
@@ -250,6 +252,7 @@ class Sender(nn.Module):
         #     vision_module_out = vision_module_out.logits
 
         return self.fc(vision_module_out)
+
 
 class KMeansSender(Sender):
     def __init__(
@@ -296,12 +299,13 @@ class KMeansSender(Sender):
     def forward(self, x, aux_input=None):
         vision_module_out = self.vision_module(x)
         # n_cluster as size
-        out_vec = torch.zeros(vision_module_out.shape[0],self.kmeans.n_clusters)
+        out_vec = torch.zeros(vision_module_out.shape[0], self.kmeans.n_clusters)
         vision_module_out = vision_module_out.detach().cpu().numpy()
         _k = self.kmeans.predict(vision_module_out)
-        out_vec[range(vision_module_out.shape[0]),_k] = 1
+        out_vec[range(vision_module_out.shape[0]), _k] = 1
         return out_vec
-        
+
+
 class ContinuousSender(Sender):
     def __init__(
         self,
@@ -317,7 +321,7 @@ class ContinuousSender(Sender):
         super(Sender, self).__init__()
         self.name = name
         self.init_vision_module(vision_module, input_dim)
-        
+
         self.init_com_layer(
             input_dim, vocab_size, get_non_linearity(non_linearity), block_com_layer
         )
@@ -376,10 +380,11 @@ class Receiver(nn.Module):
         else:
             raise RuntimeError("Unknown vision module for the Receiver")
         if vision_module == "levit":
-            warning.warn("levit will automatically resize the input to 224x224, which may be different from the original input size")
+            warning.warn(
+                "levit will automatically resize the input to 224x224, which may be different from the original input size"
+            )
             self.vision_module = nn.Sequential(
-                torchvision.transforms.Resize((224, 224)),
-                self.vision_module
+                torchvision.transforms.Resize((224, 224)), self.vision_module
             )
         self.fc = (
             nn.Identity()
@@ -423,6 +428,7 @@ class Receiver(nn.Module):
 
         return similarity_scores
 
+
 class KMeansReceiver(Receiver):
     def __init__(
         self,
@@ -461,26 +467,32 @@ class KMeansReceiver(Receiver):
         if self.s_name is not None:
             # load the alignent matrix
             if path_to_kmeans.endswith(".joblib"):
-                self.translate=np.load(self.s_name)
+                self.translate = np.load(self.s_name)
             else:
                 try:
-                    self.translate=np.load(path_to_kmeans + f"/{self.name}_to_{self.s_name}.npy")
+                    self.translate = np.load(
+                        path_to_kmeans + f"/{self.name}_to_{self.s_name}.npy"
+                    )
                 except:
-                    self.translate=np.load(path_to_kmeans + f"/{self.s_name}_to_{self.name}.npy")
+                    self.translate = np.load(
+                        path_to_kmeans + f"/{self.s_name}_to_{self.name}.npy"
+                    )
                     self.translate = np.transpose(self.translate)
                 else:
-                    raise RuntimeError(f"No alignment matrix found for {self.s_name} and {self.name}")
+                    raise RuntimeError(
+                        f"No alignment matrix found for {self.s_name} and {self.name}"
+                    )
 
     def forward(self, message, distractors, aux_input=None):
         vision_module_out = self.vision_module(distractors)
         # if self.name == "inception":
         #     vision_module_out = vision_module_out.logits
-        distractors = torch.zeros(vision_module_out.shape[0],self.kmeans.n_clusters)
+        distractors = torch.zeros(vision_module_out.shape[0], self.kmeans.n_clusters)
         vision_module_out = vision_module_out.detach().cpu().numpy()
         _k = self.kmeans.predict(vision_module_out)
         if self.r_name is not None:
             _k = self.translate[_k]
-        distractors[range(vision_module_out.shape[0]),_k] = 1
+        distractors[range(vision_module_out.shape[0]), _k] = 1
         similarity_scores = (
             torch.nn.functional.cosine_similarity(
                 message.unsqueeze(1), distractors.unsqueeze(0), dim=2
@@ -492,6 +504,7 @@ class KMeansReceiver(Receiver):
         #     aux_input["receiver_message_embedding"] = message.detach()
 
         return similarity_scores
+
 
 class AgentSampler(nn.Module):
     """Random sampler at training time, fullsweep sampler at test time."""

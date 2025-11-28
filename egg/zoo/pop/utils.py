@@ -47,7 +47,10 @@ def get_data_opts(parser):
         "--num_workers", type=int, default=4, help="Workers used in the dataloader"
     )
     group.add_argument(
-        "--force_rank", type=int, default=None, help="Force rank for parallelising communication extraction"
+        "--force_rank",
+        type=int,
+        default=None,
+        help="Force rank for parallelising communication extraction",
     )
     group.add_argument(
         "--split_dataset",
@@ -172,7 +175,7 @@ def get_vision_module_opts(parser):
     group.add_argument(
         "--use_different_architectures",
         default=True,
-        action="store_false", 
+        action="store_false",
         help="Population game with different architectures.",
     )
 
@@ -316,6 +319,7 @@ def get_game_arch_opts(parser):
         help="when communicating with simplicial messages, the number of embedding chunks",
     )
 
+
 def get_common_opts(params):
     """
     Parses and returns common options for the game, including dataset, model, and training parameters.
@@ -390,9 +394,9 @@ def path_to_parameters(path, type="wandb"):
         old_game = pathlib.Path(path)
         job_number = str(old_game.parents[0].stem)
         all_out_files = [f for f in old_game.parents[1].glob(f"*{job_number}.out")]
-        assert (
-            len(all_out_files) == 1
-        ), f"did not find one out file (missing or duplicates) : {all_out_files}"
+        assert len(all_out_files) == 1, (
+            f"did not find one out file (missing or duplicates) : {all_out_files}"
+        )
         return all_out_files[0]
 
 

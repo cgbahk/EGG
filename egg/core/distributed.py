@@ -25,9 +25,9 @@ class DistributedContext:
 
 
 def maybe_init_distributed(args) -> DistributedContext:
-    assert not hasattr(
-        args, "distributed_context"
-    ), "distributed context is already initialized?!"
+    assert not hasattr(args, "distributed_context"), (
+        "distributed context is already initialized?!"
+    )
     # default, non-distributed context
     context = DistributedContext(
         is_distributed=False, rank=0, local_rank=0, world_size=1, mode="none"

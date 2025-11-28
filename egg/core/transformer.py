@@ -121,9 +121,7 @@ class TransformerEncoder(nn.Module):
             )
 
             last_embeddings = []
-            for i, l in enumerate(
-                lengths.clamp(max=self.max_len - 1).cpu()
-            ):  # noqa: E226
+            for i, l in enumerate(lengths.clamp(max=self.max_len - 1).cpu()):  # noqa: E226
                 last_embeddings.append(transformed[i, l, :])
             transformed = torch.stack(last_embeddings)
 
@@ -159,7 +157,8 @@ class TransformerBaseEncoder(torch.nn.Module):
         self.embed_scale = math.sqrt(embed_dim)
         self.embed_positions = (
             SinusoidalPositionEmbedding(
-                max_len + 1, embed_dim  # accounting for the forced EOS added by EGG
+                max_len + 1,
+                embed_dim,  # accounting for the forced EOS added by EGG
             )
             if positional_embedding
             else None
@@ -180,7 +179,7 @@ class TransformerBaseEncoder(torch.nn.Module):
         self.init_parameters()
 
     def init_parameters(self):
-        nn.init.normal_(self.embedding.weight, mean=0, std=self.embed_dim ** -0.5)
+        nn.init.normal_(self.embedding.weight, mean=0, std=self.embed_dim**-0.5)
 
     def forward(self, src_tokens, key_padding_mask=None, attn_mask=None):
         # embed tokens and positions

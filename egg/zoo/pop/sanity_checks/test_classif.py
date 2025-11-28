@@ -281,10 +281,10 @@ if __name__ == "__main__":
         )
         test_accs = test_epoch(senders, classifier, val_dataloader, args.device)
 
-        print(f"Epoch {epoch} train acc: {sum(train_acc)/len(train_acc)}")
+        print(f"Epoch {epoch} train acc: {sum(train_acc) / len(train_acc)}")
         for i in range(len(test_accs)):
             print(
-                f"Epoch {epoch} test acc from sender {args.selected_sender_idx} tested on {i}: {sum(test_accs[i])/len(test_accs[i])}"
+                f"Epoch {epoch} test acc from sender {args.selected_sender_idx} tested on {i}: {sum(test_accs[i]) / len(test_accs[i])}"
             )
 
         # save models

@@ -56,7 +56,6 @@ class ContinuousLinearReceiver(nn.Module):
         self,
         agent: nn.Module,
     ):
-
         super(ContinuousLinearReceiver, self).__init__()
         self.agent = agent
 

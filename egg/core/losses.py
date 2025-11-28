@@ -103,9 +103,9 @@ class NTXentLoss:
         self.temperature = temperature
 
         similarities = {"cosine", "dot"}
-        assert (
-            similarity.lower() in similarities
-        ), f"Cannot recognize similarity function {similarity}"
+        assert similarity.lower() in similarities, (
+            f"Cannot recognize similarity function {similarity}"
+        )
         self.similarity = similarity
 
     @staticmethod
@@ -115,7 +115,6 @@ class NTXentLoss:
         temperature: float = 1.0,
         similarity: str = "cosine",
     ) -> Tuple[torch.Tensor, Dict[str, Any]]:
-
         if sender_output.shape != receiver_output.shape:
             raise RuntimeError(
                 f"sender_output and receiver_output must be of the same shape, "
