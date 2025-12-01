@@ -91,7 +91,6 @@ def main(params):
     callbacks = [
         ConsoleLogger(as_json=True, print_train_loss=True),
         BestStatsTracker(),
-        WandbLogger(opts),
     ]
 
     if opts.distributed_context.is_distributed:

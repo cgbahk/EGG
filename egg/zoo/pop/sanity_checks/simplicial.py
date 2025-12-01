@@ -9,8 +9,6 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from xformers import _is_triton_available
-
 Self = TypeVar("Self", bound="SimplicialEmbedding")
 
 

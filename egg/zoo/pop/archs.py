@@ -15,7 +15,6 @@ import numpy as np
 from egg.core.interaction import LoggingStrategy
 from egg.core.gs_wrappers import gumbel_softmax_sample
 from egg.core.reinforce_wrappers import RnnReceiverReinforce
-from egg.zoo.pop.scripts.analysis_tools.test_game import add_noise
 from egg.core.baselines import MeanBaseline, NoBaseline
 
 from egg.core.util import find_lengths
@@ -651,7 +650,8 @@ class Game(nn.Module):
             entropy = message[2]
             message = message[0].long()
 
-        message = message if self.noisy is None else add_noise(message, self.noisy)
+        assert self.noisy is None
+        message = message
 
         receiver_output = receiver(
             message,

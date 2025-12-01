@@ -3,7 +3,6 @@
 
 import torch
 import torch.nn.functional as F
-from egg.zoo.pop.scripts.analysis_tools.test_game import initialize_classifiers
 from egg.zoo.pop.utils import load_from_checkpoint
 from egg.core.gs_wrappers import (
     GumbelSoftmaxWrapper,
@@ -29,7 +28,7 @@ from egg.zoo.pop.archs import (
     initialize_vision_module,
     RnnReceiverReinforce,
 )
-from egg.zoo.pop.scripts.simplicial import SimplicialWrapper, Empty_wrapper
+from egg.zoo.pop.sanity_checks.simplicial import SimplicialWrapper, Empty_wrapper
 
 
 def loss(
@@ -65,14 +64,9 @@ def build_senders_receivers(
     )
     vision_model_names_receiver = eval(vision_model_names_receiver.replace("#", '"'))
 
+    assert not opts.keep_classification_layer
     vision_modules = [
         initialize_vision_module(
-            name=module_name,
-            pretrained=not opts.retrain_vision,
-            aux_logits=not opts.remove_auxlogits,
-        )
-        if not opts.keep_classification_layer
-        else initialize_classifiers(
             name=module_name,
             pretrained=not opts.retrain_vision,
             aux_logits=not opts.remove_auxlogits,

@@ -7,7 +7,6 @@ from pathlib import Path
 import glob
 
 from tqdm.auto import tqdm
-import hub
 import torch
 import random
 from PIL import ImageFilter, Image
@@ -17,7 +16,6 @@ from sklearn.cluster import KMeans
 import torchvision
 import numpy as np
 from torch.utils.data import Subset
-from egg.zoo.pop.proximity_sampler import ProximitySampler
 import warnings
 
 
@@ -358,6 +356,7 @@ def get_dataloader(
         if dataset_name == "imagenet_ood":
             train_dataset = select_ood_idxs(train_dataset)
     elif dataset_name == "places205":
+        import hub
         train_dataset = PlacesDataset(
             hub.load("hub://activeloop/places205"), transform=transformations
         )
@@ -402,21 +401,7 @@ def get_dataloader(
                 test_dataset, batch_size=batch_size
             )
         if similbatch_training:
-            # get indexes of test set
-            assert dataset_name == "imagenet_val", (
-                "cosine_sim training only supported for imagenet_val dataset."
-            )
-            train_sampler = ProximitySampler(
-                "./output/cos_sim_matrix.npy", batch_size, train_dataset.indices
-            )
-            test_sampler = ProximitySampler(
-                "./output/cos_sim_matrix.npy", batch_size, test_dataset.indices
-            )
-            if shuffle:
-                warnings.warn(
-                    "Shuffling is not supported with proximity sampler. Setting shuffle to False."
-                )
-            shuffle = False
+            assert False
         else:
             test_sampler = None
         test_loader = torch.utils.data.DataLoader(
@@ -507,7 +492,7 @@ class ImagenetValDataset(Dataset):
         with open(annotations_file) as f:
             self.img_labels = [int(line) for line in f.readlines()]
         self.transform = transform
-        self.files = sorted(glob.glob(f"{img_dir}/*.JPEG"))
+        self.files = sorted(glob.glob(f"{img_dir}/**/*.JPEG", recursive=True))
 
     def __len__(self):
         return len(self.img_labels)
