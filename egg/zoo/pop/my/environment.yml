@@ -1,0 +1,25 @@
+channels:
+  - pytorch
+dependencies:
+  # Official support only upto 2.5
+  # https://github.com/pytorch/pytorch/issues/138506
+  - pytorch::pytorch
+
+  - pytorch-cuda
+  - torchvision
+  - tensorboard
+
+  # From `requirements.txt`
+  - scipy
+  - numpy
+  - pytest
+  - editdistance
+  - dataclasses
+  - rich
+  - scikit-learn
+  - wandb
+  - submitit
+  - timm
+  - pandas
+
+  # May bypass install of `EGG` by setting `PYTHONPATH`
