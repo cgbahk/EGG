@@ -570,7 +570,7 @@ class ImageTransformation:
             transformations.append(transforms.Normalize(mean=[0.5] * 3, std=[0.5] * 3))
 
         self.transform = transforms.Compose(transformations)
-        self.test_attack = test_attack is None
+        self.test_attack = test_attack is not None  # TODO Check paper whether this was intended
         self.return_original_image = return_original_image
         if self.return_original_image or self.test_attack:
             self.original_image_transform = transforms.Compose(
