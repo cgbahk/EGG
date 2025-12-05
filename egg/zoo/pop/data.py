@@ -492,7 +492,7 @@ class ImagenetValDataset(Dataset):
         with open(annotations_file) as f:
             self.img_labels = [int(line) for line in f.readlines()]
         self.transform = transform
-        self.files = sorted(glob.glob(f"{img_dir}/**/*.JPEG", recursive=True))
+        self.files = sorted(Path(img_dir).rglob("*.JPEG"), key=lambda p: p.name)
 
     def __len__(self):
         return len(self.img_labels)
